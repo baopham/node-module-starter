@@ -1,6 +1,6 @@
 {
   "name": "node-module-starter",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Node module starter",
   "bin": {
     "node-starter": "bin/node-starter"
@@ -29,6 +29,5 @@
     "fs-extra": "^4.0.2",
     "inquirer": "^3.3.0"
   },
-  "devDependencies": {
-  }
+  "devDependencies": {}
 }
