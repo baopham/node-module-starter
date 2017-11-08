@@ -126,6 +126,8 @@ function setupScripts(answers) {
   if (program.overrideScripts || !package['pre-commit']) {
     package['pre-commit'] = 'lint-staged';
   }
+
+  fs.writeJson(packagePath, package, { spaces: 2 });
 }
 
 function done() {
