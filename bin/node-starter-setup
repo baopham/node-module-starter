@@ -39,7 +39,8 @@ function setupFiles() {
     '.eslintrc',
     '.gitignore',
     '.flowconfig',
-    '.babelrc'
+    '.babelrc',
+    '.lintstagedrc'
   ];
 
   items.forEach(item => {
@@ -114,7 +115,7 @@ function setupScripts(answers) {
     build: 'babel src/ -d lib/',
     lint: 'eslint ./src/**/*.js',
     prettier: 'prettier --write --single-quote ./src/**/*.js',
-    prepublish: 'npm run test && npm run build',
+    preversion: 'npm test && npm run build && git add -f lib',
     flow: 'flow',
     precommit: 'lint-staged'
   };
