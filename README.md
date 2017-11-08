@@ -15,7 +15,7 @@ Support:
 Install:
 --------
 ```
-npm install module-starter -g
+npm install node-module-starter -g
 ```
 
 Usage:

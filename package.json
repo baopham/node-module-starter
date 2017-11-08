@@ -1,5 +1,5 @@
 {
-  "name": "module-starter",
+  "name": "node-module-starter",
   "version": "1.0.0",
   "description": "Node module starter",
   "bin": {
