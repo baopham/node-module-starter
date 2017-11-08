@@ -1,0 +1,137 @@
+#!/usr/bin/env node
+
+const path = require('path');
+const fs = require('fs-extra');
+const { execSync } = require('child_process');
+const inquirer = require('inquirer');
+const chalk = require('chalk');
+const program = require('commander');
+const print = console.log;
+
+program
+  .option('--skip-files', 'Skip setting up files (e.g. travis, editorconfig, git hooks, etc.)')
+  .option('--skip-deps', 'Skip installing dependencies')
+  .option('--skip-scripts', 'Skip setting up npm scripts')
+  .option('--override-files', 'Override current config files but will not remove any existing files')
+  .option('--override-scripts', 'Override the current npm scripts but will not remove any existing scripts')
+  .parse(process.argv);
+
+setup();
+
+function setup() {
+  setupProject();
+  setupFiles();
+  setupDependencies().then(setupScripts).then(done);
+}
+
+function setupProject() {
+  if (!fs.pathExistsSync(path.resolve('package.json'))) {
+    execSync('npm init', { stdio: 'inherit' });
+  }
+}
+
+function setupFiles() {
+  if (program.skipFiles) return;
+
+  const items = [
+    '.travis.yml',
+    '.editorconfig',
+    '.eslintrc',
+    '.gitignore',
+    '.flowconfig',
+    '.babelrc'
+  ];
+
+  items.forEach(item => {
+    const dest = path.resolve(item);
+    const source = path.resolve(path.join(__dirname, '..', 'templates', item));
+    fs.copySync(source, dest, { overwrite: program.overrideFiles });
+  });
+
+  print(chalk.green('Done setting up necessary files'));
+}
+
+function setupDependencies() {
+  if (program.skipDeps) return Promise.resolve();
+
+  print(chalk.green('About to install all the common dependencies...'));
+
+  return inquirer.prompt([
+    {
+      type: 'confirm',
+      name: 'useYarn',
+      message: 'Do you want to use yarn?'
+    },
+    {
+      type: 'confirm',
+      name: 'useJest',
+      message: 'Do you want to use jest?'
+    },
+  ]).then(install);
+
+  function install(answers) {
+    const devDeps = [
+      'eslint',
+      'eslint-config-pretty-standard',
+      'eslint-plugin-import',
+      'prettier',
+      '@babel/cli',
+      '@babel/core',
+      '@babel/preset-env',
+      '@babel/preset-flow',
+      'babel-eslint',
+      'flow-bin',
+      'lint-staged',
+      'husky'
+    ];
+
+    if (answers.useJest) {
+      devDeps.push('jest');
+    }
+
+    const cmd = answers.useYarn ? 'yarn add --dev' : 'npm install --save-dev';
+
+    execSync(`${cmd} ${devDeps.join(' ')}`, { stdio: 'inherit' });
+
+    return answers;
+  }
+}
+
+function setupScripts(answers = { useJest: false }) {
+  if (program.skipScripts) return;
+
+  const packagePath = path.resolve('package.json');
+  const package = require(packagePath);
+
+  if (!package.scripts) package.scripts = {};
+
+  const repo = package.name;
+  const baseTest = 'npm run lint && npm run flow';
+
+  const scripts = {
+    test: useJest ? `${baseTest} jest` : baseTest,
+    build: 'babel src/ -d lib/',
+    lint: 'eslint ./src/**/*.js',
+    prettier: 'prettier --write --single-quote ./src/**/*.js',
+    prepublish: 'npm run test && npm run build',
+    flow: 'flow'
+  };
+
+  Object.keys(scripts).forEach(command => {
+    if (!program.overrideScripts && package.scripts[command]) return;
+    package.scripts[command] = scripts[command];
+  });
+
+  if (program.overrideScripts || !package['pre-commit']) {
+    package['pre-commit'] = 'lint-staged';
+  }
+
+  fs.writeJson(packagePath, package, { spaces: 2 })
+    .then(() => {
+      execSync('npm run postinstall', { stdio: 'inherit' });
+    });
+}
+
+function done() {
+  print(chalk.green('Done!'));
+}
