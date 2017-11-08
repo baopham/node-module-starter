@@ -43,8 +43,9 @@ function setupFiles() {
   ];
 
   items.forEach(item => {
+    const filename = item.replace(/^\./, '');
     const dest = path.resolve(item);
-    const source = path.resolve(path.join(__dirname, '..', 'templates', item));
+    const source = path.resolve(path.join(__dirname, '..', 'templates', filename));
     fs.copySync(source, dest, { overwrite: program.overrideFiles });
   });
 
