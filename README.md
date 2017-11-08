@@ -16,13 +16,13 @@ Support:
 
 Install:
 --------
-```
+```bash
 npm install node-module-starter -g
 ```
 
 Usage:
 ------
-```
+```bash
 mkdir new-project && cd !$
 node-starter setup --help
 ```
