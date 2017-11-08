@@ -97,7 +97,7 @@ function setupDependencies() {
   }
 }
 
-function setupScripts(answers = { useJest: false }) {
+function setupScripts(answers) {
   if (program.skipScripts) return;
 
   const packagePath = path.resolve('package.json');
@@ -109,7 +109,7 @@ function setupScripts(answers = { useJest: false }) {
   const baseTest = 'npm run lint && npm run flow';
 
   const scripts = {
-    test: useJest ? `${baseTest} jest` : baseTest,
+    test: answers.useJest ? `${baseTest} jest` : baseTest,
     build: 'babel src/ -d lib/',
     lint: 'eslint ./src/**/*.js',
     prettier: 'prettier --write --single-quote ./src/**/*.js',
@@ -125,11 +125,6 @@ function setupScripts(answers = { useJest: false }) {
   if (program.overrideScripts || !package['pre-commit']) {
     package['pre-commit'] = 'lint-staged';
   }
-
-  fs.writeJson(packagePath, package, { spaces: 2 })
-    .then(() => {
-      execSync('npm run postinstall', { stdio: 'inherit' });
-    });
 }
 
 function done() {
