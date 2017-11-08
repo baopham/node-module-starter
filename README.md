@@ -8,10 +8,10 @@ CLI to setup a new node module
 
 Support:
 
-* Flow
 * Babel
 * ESLint (pretty-standard)
 * Prettier
+* Flow (optional)
 * Yarn (optional)
 * Jest (optional)
 
