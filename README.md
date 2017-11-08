@@ -21,7 +21,8 @@ npm install module-starter -g
 Usage:
 ------
 ```
-node-starter setup
+mkdir new-project && cd !$
+node-starter setup --help
 ```
 
 Requirements:
