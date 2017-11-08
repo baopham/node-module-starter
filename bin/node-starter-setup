@@ -115,17 +115,14 @@ function setupScripts(answers) {
     lint: 'eslint ./src/**/*.js',
     prettier: 'prettier --write --single-quote ./src/**/*.js',
     prepublish: 'npm run test && npm run build',
-    flow: 'flow'
+    flow: 'flow',
+    precommit: 'lint-staged'
   };
 
   Object.keys(scripts).forEach(command => {
     if (!program.overrideScripts && package.scripts[command]) return;
     package.scripts[command] = scripts[command];
   });
-
-  if (program.overrideScripts || !package['pre-commit']) {
-    package['pre-commit'] = 'lint-staged';
-  }
 
   fs.writeJson(packagePath, package, { spaces: 2 });
 }
