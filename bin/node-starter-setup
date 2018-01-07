@@ -140,6 +140,15 @@ function setupScripts(answers) {
     package.scripts[command] = scripts[command];
   });
 
+  if (!package['lint-staged'] || program.overrideScripts) {
+    package['lint-staged'] = {
+      '*.js': [
+        'npm run prettier',
+        'git add'
+      ]
+    };
+  }
+
   fs.writeJson(packagePath, package, { spaces: 2 });
 
   return answers;
