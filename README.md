@@ -11,6 +11,7 @@ Support:
 * Babel
 * ESLint (pretty-standard)
 * Prettier
+* lint-staged
 * Flow (optional)
 * Yarn (optional)
 * Jest (optional)
