@@ -20,7 +20,11 @@ setup();
 
 function setup() {
   setupProject();
-  ask().then(setupFiles).then(setupDependencies).then(setupScripts).then(done);
+  ask()
+    .then(setupFiles)
+    .then(setupDependencies)
+    .then(setupScripts)
+    .then(done);
 }
 
 function ask() {
@@ -54,25 +58,26 @@ function setupFiles(answers) {
 
   print(chalk.green('Setting up config files...'));
 
-  const items = [
+  const filenames = [
     '.travis.yml',
     '.editorconfig',
     '.eslintrc',
     '.gitignore',
-    '.babelrc',
     '.lintstagedrc'
   ];
 
-  if (answers.useFlow) items.push('.flowconfig');
+  if (answers.useFlow) filenames.push('.flowconfig');
 
-  items.forEach(item => {
-    const filename = item.replace(/^\./, '');
-    const dest = path.resolve(item);
-    const source = path.resolve(path.join(__dirname, '..', 'templates', filename));
-    fs.copySync(source, dest, { overwrite: program.overrideFiles });
-  });
+  filenames.forEach(filename => templateToFile(filename.replace(/^\./, ''), filename));
+  templateToFile(answers.useFlow ? 'babelrc.flow' : 'babelrc.no-flow', '.babelrc');
 
   return answers;
+
+  function templateToFile(template, filename) {
+    const dest = path.resolve(filename);
+    const source = path.resolve(path.join(__dirname, '..', 'templates', template));
+    fs.copySync(source, dest, { overwrite: program.overrideFiles });
+  }
 }
 
 function setupDependencies(answers) {
@@ -93,7 +98,7 @@ function setupDependencies(answers) {
     'husky'
   ];
 
-  if (answers.useJest) devDeps.push('jest');
+  if (answers.useJest) devDeps.push('jest', 'babel-core@^7.0.0-0');
   if (answers.useFlow) devDeps.push('flow-bin', '@babel/preset-flow');
 
   const cmd = answers.useYarn ? 'yarn add --dev' : 'npm install --save-dev';
