@@ -8,6 +8,8 @@ const chalk = require('chalk');
 const program = require('commander');
 const print = console.log;
 
+const EMPTY_TEST = 'echo \"Error: no test specified\" && exit 1';
+
 program
   .option('--skip-files', 'Skip setting up files (e.g. travis, editorconfig, git hooks, etc.)')
   .option('--skip-deps', 'Skip installing dependencies')
@@ -135,8 +137,14 @@ function setupScripts(answers) {
   };
 
   Object.keys(scripts).forEach(command => {
-    if (!scripts[command]) return;
-    if (!program.overrideScripts && package.scripts[command]) return;
+    const shouldWrite = (
+      scripts[command] && (
+        program.overrideScripts ||
+        !package.scripts[command] ||
+        (command === 'test' && package.scripts[command] === EMPTY_TEST)
+      )
+    )
+    if (!shouldWrite) return;
     package.scripts[command] = scripts[command];
   });
 
