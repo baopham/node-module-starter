@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 
-const path = require('path');
-const fs = require('fs-extra');
-const { execSync } = require('child_process');
-const inquirer = require('inquirer');
-const chalk = require('chalk');
-const program = require('commander');
-const print = console.log;
+const path = require('path')
+const fs = require('fs-extra')
+const { execSync } = require('child_process')
+const inquirer = require('inquirer')
+const chalk = require('chalk')
+const program = require('commander')
+const print = console.log
 
-const EMPTY_TEST = 'echo \"Error: no test specified\" && exit 1';
+const EMPTY_TEST = 'echo "Error: no test specified" && exit 1'
 
 program
   .option('--skip-files', 'Skip setting up files (e.g. travis, editorconfig, git hooks, etc.)')
@@ -16,20 +16,20 @@ program
   .option('--skip-scripts', 'Skip setting up npm scripts')
   .option('--override-files', 'Override current config files but will not remove any existing files')
   .option('--override-scripts', 'Override the current npm scripts but will not remove any existing scripts')
-  .parse(process.argv);
+  .parse(process.argv)
 
-setup();
+setup()
 
-function setup() {
-  setupProject();
+function setup () {
+  setupProject()
   ask()
     .then(setupFiles)
     .then(setupDependencies)
     .then(setupScripts)
-    .then(done);
+    .then(done)
 }
 
-function ask() {
+function ask () {
   return inquirer.prompt([
     {
       type: 'confirm',
@@ -46,21 +46,21 @@ function ask() {
       name: 'useJest',
       message: 'Do you want to use jest?'
     }
-  ]);
+  ])
 }
 
-function setupProject() {
+function setupProject () {
   if (!fs.pathExistsSync(path.resolve('package.json'))) {
-    execSync('npm init', { stdio: 'inherit' });
+    execSync('npm init', { stdio: 'inherit' })
   }
 
-  execSync('git init', { stdio: 'inherit' });
+  execSync('git init', { stdio: 'inherit' })
 }
 
-function setupFiles(answers) {
-  if (program.skipFiles) return answers;
+function setupFiles (answers) {
+  if (program.skipFiles) return answers
 
-  print(chalk.green('Setting up config files...'));
+  print(chalk.green('Setting up config files...'))
 
   const filenames = [
     '.travis.yml',
@@ -68,26 +68,26 @@ function setupFiles(answers) {
     '.eslintrc',
     '.gitignore',
     '.lintstagedrc'
-  ];
+  ]
 
-  if (answers.useFlow) filenames.push('.flowconfig');
+  if (answers.useFlow) filenames.push('.flowconfig')
 
-  filenames.forEach(filename => templateToFile(filename.replace(/^\./, ''), filename));
-  templateToFile(answers.useFlow ? 'babelrc.flow' : 'babelrc.no-flow', '.babelrc');
+  filenames.forEach(filename => templateToFile(filename.replace(/^\./, ''), filename))
+  templateToFile(answers.useFlow ? 'babelrc.flow' : 'babelrc.no-flow', '.babelrc')
 
-  return answers;
+  return answers
 
-  function templateToFile(template, filename) {
-    const dest = path.resolve(filename);
-    const source = path.resolve(path.join(__dirname, '..', 'templates', template));
-    fs.copySync(source, dest, { overwrite: program.overrideFiles });
+  function templateToFile (template, filename) {
+    const dest = path.resolve(filename)
+    const source = path.resolve(path.join(__dirname, '..', 'templates', template))
+    fs.copySync(source, dest, { overwrite: program.overrideFiles })
   }
 }
 
-function setupDependencies(answers) {
-  if (program.skipDeps) return answers;
+function setupDependencies (answers) {
+  if (program.skipDeps) return answers
 
-  print(chalk.green('Installing all the common dependencies...'));
+  print(chalk.green('Installing all the common dependencies...'))
 
   const devDeps = [
     'eslint',
@@ -100,33 +100,32 @@ function setupDependencies(answers) {
     'babel-eslint',
     'lint-staged',
     'husky'
-  ];
+  ]
 
-  if (answers.useJest) devDeps.push('jest', 'babel-core@^7.0.0-0');
-  if (answers.useFlow) devDeps.push('flow-bin', '@babel/preset-flow');
+  if (answers.useJest) devDeps.push('jest', 'babel-core@^7.0.0-0')
+  if (answers.useFlow) devDeps.push('flow-bin', '@babel/preset-flow')
 
-  const cmd = answers.useYarn ? 'yarn add --dev' : 'npm install --save-dev';
+  const cmd = answers.useYarn ? 'yarn add --dev' : 'npm install --save-dev'
 
-  execSync(`${cmd} ${devDeps.join(' ')}`, { stdio: 'inherit' });
+  execSync(`${cmd} ${devDeps.join(' ')}`, { stdio: 'inherit' })
 
-  return answers;
+  return answers
 }
 
-function setupScripts(answers) {
-  if (program.skipScripts) return answers;
+function setupScripts (answers) {
+  if (program.skipScripts) return answers
 
-  const packagePath = path.resolve('package.json');
-  const package = require(packagePath);
+  const packagePath = path.resolve('package.json')
+  const pkg = require(packagePath)
 
-  if (!package.scripts) package.scripts = {};
+  if (!pkg.scripts) pkg.scripts = {}
 
-  const repo = package.name;
   const tests = [
     'npm run lint'
-  ];
+  ]
 
-  if (answers.useFlow) tests.push('npm run flow');
-  if (answers.useJest) tests.push('jest');
+  if (answers.useFlow) tests.push('npm run flow')
+  if (answers.useJest) tests.push('jest')
 
   const scripts = {
     test: tests.join(' && '),
@@ -136,34 +135,34 @@ function setupScripts(answers) {
     preversion: 'npm test && npm run build && git add -f lib',
     flow: answers.useFlow ? 'flow' : null,
     precommit: 'lint-staged'
-  };
+  }
 
   Object.keys(scripts).forEach(command => {
     const shouldWrite = (
       scripts[command] && (
         program.overrideScripts ||
-        !package.scripts[command] ||
-        (command === 'test' && package.scripts[command] === EMPTY_TEST)
+        !pkg.scripts[command] ||
+        (command === 'test' && pkg.scripts[command] === EMPTY_TEST)
       )
     )
-    if (!shouldWrite) return;
-    package.scripts[command] = scripts[command];
-  });
+    if (!shouldWrite) return
+    pkg.scripts[command] = scripts[command]
+  })
 
-  if (!package['lint-staged'] || program.overrideScripts) {
-    package['lint-staged'] = {
+  if (!pkg['lint-staged'] || program.overrideScripts) {
+    pkg['lint-staged'] = {
       '*.js': [
         'npm run prettier',
         'git add'
       ]
-    };
+    }
   }
 
-  fs.writeJson(packagePath, package, { spaces: 2 });
+  fs.writeJson(packagePath, pkg, { spaces: 2 })
 
-  return answers;
+  return answers
 }
 
-function done() {
-  print(chalk.green('Done!'));
+function done () {
+  print(chalk.green('Done!'))
 }
